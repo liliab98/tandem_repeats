@@ -65,11 +65,12 @@ class SuffixTree:
                 return
 
     def fill_leaf_list(self, node):
+        if node.children == []:
+            return [node.start + 1]
         for child in node.children:
-            if child.children == []:
-                node.leaf_list.append(child.start)
-            else:
-                node.leaf_list += self.fill_leaf_list(child)
+            node.leaf_list += self.fill_leaf_list(child)
+            node.leaf_list.sort()
+        return node.leaf_list
 
     def print_tree(self, ascii=False):
         if ascii:
