@@ -145,7 +145,7 @@ class SuffixTree:
         self.print_node_ascii(node, line + "  ")
 
 
-def traverse(string, node, tandem_repeats):
+def traverse_basic(string, node, tandem_repeats):
     # Select an unmarked internal node v
     if node.children != [] and not node.mark and node != tree.root:
         # mark v and execute steps 2a and 2b for node v
@@ -159,7 +159,7 @@ def traverse(string, node, tandem_repeats):
                 if string[i - 1] != string[(i + 2 * node.D) - 1]:
                     tandem_repeats.append((i, node.D))
     for child in node.children:
-        traverse(string, child, tandem_repeats)
+        traverse_basic(string, child, tandem_repeats)
 
 
 def basic(tree):
@@ -167,7 +167,7 @@ def basic(tree):
     tandem_repeats = []
     branching_tandem_repeats = []
     # get all branching tandem repeats
-    traverse(tree.text, tree.root, branching_tandem_repeats)
+    traverse_basic(tree.text, tree.root, branching_tandem_repeats)
     # 1. Select an unmarked node v
     #    Mark v and execute steps 2a and 2b for node v
 
@@ -192,9 +192,81 @@ def basic(tree):
     return tandem_repeats
 
 
+def traverse_extended(string, node, tandem_repeats):
+    # 1. Select an unmarked internal node v
+    if node.children != [] and not node.mark and node != tree.root:
+        # mark v and execute steps 2a and 2b for node v
+        node.mark = True
+        # 2a. Collect the leaf-list LL'(v) of node v
+        biggest_leaf_list = []
+        for child in node.children:
+            if len(child.leaf_list) > len(biggest_leaf_list):
+                biggest_leaf_list = child.leaf_list
+        new_leaf_list = [
+            item for item in node.leaf_list if item not in biggest_leaf_list
+        ]
+        for i in new_leaf_list:
+            # 2b. For each leaf i in LL'(v) test wether
+            j = i + node.D
+            # Test 1: if it's a tandem repeat
+            if j in node.leaf_list:
+                # Test 2: if its branching
+                if string[i - 1] != string[(i + 2 * node.D) - 1]:
+                    tandem_repeats.append((i, node.D))
+            # 2c. For each leaf k in LL'(v) test wether
+            k = i - node.D
+            # Test 1: if it's a tandem repeat
+            if k in node.leaf_list:
+                # Test 2: if its branching
+                if string[k - 1] != string[(k + 2 * node.D) - 1]:
+                    tandem_repeats.append((k, node.D))
+    for child in node.children:
+        traverse_extended(string, child, tandem_repeats)
+
+
+def extended(tree):
+    # tandem reapeats are denoted by (i, a, 2)
+    tandem_repeats = []
+    branching_tandem_repeats = []
+    # get all branching tandem repeats
+    traverse_extended(tree.text, tree.root, branching_tandem_repeats)
+    # 1. Select an unmarked internal node v.
+    # Mark v and execute steps 2a and 2b and 2c for node v.
+
+    # 2a. Collect the leaf-list LL'(v) for node v.
+    # 2b. For each leaf i in LL'(v) test wether
+    #     - the leaf j = i + D(v) is in LL'(v).
+    #     - If yes, test wether S[i] /= S[i+2D(v)].
+    #     If and only if both tests return true,
+    #     there is a branching tandem repeat of length 2D(v)
+    #     and depth D(v) starting at position i.
+
+    # 2c. For each leaf j in LL'(v) test wether
+    #     - the leaf i = j - D(v) is in LL'(v).
+    #     - If yes, test wether S[i] /= S[i+2D(v)].
+    #     If and only if both tests return true,
+    #     there is a branching tandem repeat of length 2D(v)
+    #     and depth D(v) ending at position j.
+
+    # Left rotate branhcing tandem repeats to get all
+    for ta in branching_tandem_repeats:
+        begin, length = ta
+        step = 1
+        while (
+            tree.text[begin - step : begin - step + length]
+            == tree.text[begin - step + length : begin - step + 2 * length]
+        ):
+            tandem_repeats.append((begin - step + 1, length))
+            step += 1
+    return tandem_repeats
+
+
 text = "Mississippi"  # "ABAABAABBBA" # "banana"
 tree = SuffixTree(text)
 tree.print_tree()
-ta = basic(tree)
+ta1 = basic(tree)
+ta = extended(tree)
+for elem in ta1:
+    print(elem)
 for elem in ta:
     print(elem)
