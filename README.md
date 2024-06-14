@@ -26,3 +26,7 @@ Prerequisites
 - Python 3.x
 - Required packages: matplotlib, numpy
 
+## Acknowledgments
+The Stoye and Gusfield Algorithms can be found in their paper "Linear Time Algorithms for Finding and Representing all the Tandem Repeats in a String" see https://pub.uni-bielefeld.de/record/1970513.
+
+The project was carried out as part of the Master's program in Bioinformatics at Aarhus University. It was supervised by Christian Storm.
